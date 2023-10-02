@@ -17,6 +17,7 @@ public class HomeScreen extends JPanel {
 
         JButton teachersButton = new JButton("Professores");
         teachersButton.setSize(buttonsDimension);
+        teachersButton.addActionListener(e -> window.setContent(new TeachersScreen(window)));
         this.add(teachersButton);
 
         JButton schoolClassesButton = new JButton("Turmas");
