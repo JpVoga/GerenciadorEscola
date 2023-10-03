@@ -20,6 +20,9 @@ public class StudentsScreen extends JPanel {
             String firstName = JOptionPane.showInputDialog(null, "Insira o novo primeiro nome do aluno: ", "");
             String lastName = JOptionPane.showInputDialog(null, "Insira o novo sobrenome do aluno: ", "");
 
+            if (firstName == null) firstName = "";
+            if (lastName == null) lastName = "";
+
             if ((firstName.length() == 0) || (lastName.length() == 0)) {
                 JOptionPane.showMessageDialog(null, "Erro: Nome e sobrenome do aluno devem ser preenchidos", "Erro", JOptionPane.ERROR_MESSAGE);
             }

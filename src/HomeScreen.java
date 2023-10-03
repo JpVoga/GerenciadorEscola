@@ -22,6 +22,7 @@ public class HomeScreen extends JPanel {
 
         JButton schoolClassesButton = new JButton("Turmas");
         schoolClassesButton.setSize(buttonsDimension);
+        schoolClassesButton.addActionListener(e -> window.setContent(new SchoolClassesScreen(window)));
         this.add(schoolClassesButton);
     }
 }
