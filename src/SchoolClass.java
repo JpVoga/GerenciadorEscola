@@ -1,4 +1,6 @@
-import java.util.ArrayList;;
+import java.util.ArrayList;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;;
 
 public class SchoolClass {
     private int id = 0;
@@ -42,6 +44,6 @@ public class SchoolClass {
 
     public void setStudentIds(ArrayList<Integer> studentIds) {
         this.studentIds.clear();
-        this.studentIds.addAll(studentIds);
+        this.studentIds.addAll(studentIds.stream().distinct().collect(Collectors.toList()));
     }
 }

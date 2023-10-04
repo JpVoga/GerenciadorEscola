@@ -1,5 +1,5 @@
 import java.sql.*;
-import java.util.Collection;
+import java.util.*;
 
 import javax.swing.JOptionPane;
 
@@ -18,13 +18,6 @@ public class Database {
 
     private static String escapeQuotes(String string) {
         return string.replace("\'", "\\\'").replace("\"", "\\\"");
-    }
-
-    private static void addStudentsToSchoolClass(Collection<Integer> studentIds, int schoolClassId) throws SQLException {
-        for (Integer studentId: studentIds) {
-            Statement statement = connection.createStatement();
-            statement.execute(String.format("INSERT INTO student_class_rel(student_id, class_id) VALUE(%d, %d)", studentId, schoolClassId));
-        }
     }
 
     public static Connection getConnection() {return connection;}
@@ -119,19 +112,26 @@ public class Database {
 
     public static SchoolClass createSchoolClass(SchoolClass schoolClass) throws SQLException {
         Statement statement = connection.createStatement();
-        statement.execute(String.format("INSERT INTO class(name, teacher_id) VALUE(\"%s\", %d)", escapeQuotes(schoolClass.getName()), schoolClass.getTeacherId()));
+        statement.execute(
+            String.format(
+                "INSERT INTO class(name, teacher_id) VALUE(\"%s\", %s)",
+                escapeQuotes(schoolClass.getName()),
+                ((schoolClass.getTeacherId() == null) || (schoolClass.getTeacherId().equals(0)))? "NULL":Integer.toString(schoolClass.getTeacherId())
+            )
+        );
 
         statement = connection.createStatement();
-        statement.execute("SELECT last_insert_id()");
+        statement.execute("SELECT last_insert_id() AS \"result\"");
         ResultSet resultSet = statement.getResultSet();
         resultSet.next();
-        int newSchoolClassId = resultSet.getInt(1);
+        int id = resultSet.getInt("result");
 
-        addStudentsToSchoolClass(schoolClass.getStudentIds(), newSchoolClassId);
+        for (int studentId: schoolClass.getStudentIds()) {
+            statement = connection.createStatement();
+            statement.execute(String.format("INSERT INTO student_class_rel(student_id, class_id) VALUE(%d, %d)", studentId, id));
+        }
 
-        SchoolClass newSchoolClass = new SchoolClass(newSchoolClassId, schoolClass.getName(), schoolClass.getTeacherId());
-        newSchoolClass.setStudentIds(schoolClass.getStudentIds());
-        return newSchoolClass;
+        return readSchoolClass(id);
     }
 
     public static SchoolClass readSchoolClass(int id) throws SQLException {
@@ -139,20 +139,22 @@ public class Database {
         statement.execute(String.format("SELECT * FROM class WHERE id = %d", id));
 
         ResultSet resultSet = statement.getResultSet();
-        if (resultSet.next()) {
-            SchoolClass schoolClass = new SchoolClass(id, resultSet.getString("name"), resultSet.getInt("teacher_id"));
+        resultSet.next();
 
-            statement = connection.createStatement();
-            statement.execute(String.format("SELECT * FROM student_class_rel WHERE class_id = %d", schoolClass.getId()));
+        int teacherId = resultSet.getInt("teacher_id");
+        SchoolClass schoolClass = new SchoolClass(resultSet.getInt("id"), resultSet.getString("name"), (teacherId == 0)? null:teacherId);
 
-            resultSet = statement.getResultSet();
-            while (resultSet.next()) {
-                schoolClass.getStudentIds().add(resultSet.getInt("student_id"));
-            }
-
-            return schoolClass;
+        ArrayList<Integer> studentIds = new ArrayList<>();
+        statement = connection.createStatement();
+        statement.execute(String.format("SELECT * FROM student_class_rel WHERE class_id = %d", id));
+        resultSet = statement.getResultSet();
+        while (resultSet.next()) {
+            studentIds.add(resultSet.getInt("student_id"));
         }
-        else return null;
+
+        schoolClass.setStudentIds(studentIds);
+
+        return schoolClass;
     }
 
     public static SchoolClass updateSchoolClass(int id, SchoolClass schoolClass) throws SQLException {
@@ -160,16 +162,22 @@ public class Database {
         statement.execute(String.format("UPDATE class SET name = \"%s\" WHERE id = %d", escapeQuotes(schoolClass.getName()), id));
 
         statement = connection.createStatement();
-        statement.execute(String.format("UPDATE class SET teacher_id = %d WHERE id = %d", schoolClass.getTeacherId(), id));
+        if (schoolClass.getTeacherId() == null || schoolClass.getTeacherId().equals(0)) {
+            statement.execute(String.format("UPDATE class SET teacher_id = NULL WHERE id = %d", id));
+        }
+        else {
+            statement.execute(String.format("UPDATE class SET teacher_id = %d WHERE id = %d", schoolClass.getTeacherId(), id));
+        }
 
         statement = connection.createStatement();
         statement.execute(String.format("DELETE FROM student_class_rel WHERE class_id = %d", id));
 
-        addStudentsToSchoolClass(schoolClass.getStudentIds(), id);
+        for (int studentId: schoolClass.getStudentIds()) {
+            statement = connection.createStatement();
+            statement.execute(String.format("INSERT INTO student_class_rel(student_id, class_id) VALUE(%d, %d)", studentId, id));
+        }
 
-        SchoolClass newSchoolClass = new SchoolClass(id, schoolClass.getName(), schoolClass.getTeacherId());
-        newSchoolClass.setStudentIds(schoolClass.getStudentIds());
-        return newSchoolClass;
+        return readSchoolClass(id);
     }
 
     public static void deleteSchoolClass(int id) throws SQLException {

@@ -18,13 +18,14 @@ public class SchoolClassesScreen extends JPanel {
 
         JButton addSchoolClassButton = new JButton("Nova Turma");
         addSchoolClassButton.addActionListener(e -> {
-            String name = JOptionPane.showInputDialog(null, "Insira o novo primeiro nome da turma: ", "");
-            int teacherId = -1;
+            String name = JOptionPane.showInputDialog(null, "Insira o nome da turma: ", "");
+            Integer teacherId = -1;
 
             if (name == null) name = "";
 
             try {
-                teacherId = Integer.parseInt(JOptionPane.showInputDialog(null, "Insira o ID do professor: ", ""));
+                teacherId = Integer.parseInt(JOptionPane.showInputDialog(null, "Insira o ID do professor (0 para ser null): ", ""));
+                if (teacherId == 0) teacherId = null;
             }
             catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Erro: ID de professor inválido", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -40,6 +41,7 @@ public class SchoolClassesScreen extends JPanel {
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(null, "Erro fatal: Falha ao conectar-se com o banco de dados", "Erro", JOptionPane.ERROR_MESSAGE);
                     goBackToHome();
+                    ex.printStackTrace();
                 }
             }
         });
@@ -70,7 +72,7 @@ public class SchoolClassesScreen extends JPanel {
                 schoolClassPanel.add(new JLabel(String.format("(%d) %s", schoolClass.getId(), schoolClass.getName())));
 
                 JButton modifySchoolClass = new JButton("Modificar");
-                modifySchoolClass.addActionListener(e -> System.out.println("Modify class..."));;
+                modifySchoolClass.addActionListener(e -> this.window.setContent(new ModifySchoolClassScreen(window, schoolClass)));;
                 schoolClassPanel.add(modifySchoolClass);
 
                 JButton deleteSchoolClass = new JButton("Excluir Turma");
