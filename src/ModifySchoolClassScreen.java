@@ -63,11 +63,12 @@ public class ModifySchoolClassScreen extends JPanel {
         JButton addStudentButton = new JButton("Adcionar Aluno");
         addStudentButton.addActionListener(e -> {
             try {
-                int id = Integer.parseInt(JOptionPane.showInputDialog(null, "Insira o ID do aluno: ", ""));
+                int studentId = Integer.parseInt(JOptionPane.showInputDialog(null, "Insira o ID do aluno: ", ""));
 
                 try {
-                    schoolClass.getStudentIds().add(id);
-                    Database.updateSchoolClass(schoolClass.getId(), schoolClass);
+                    if (!(schoolClass.getStudentIds().contains(studentId))) schoolClass.getStudentIds().add(studentId);
+                    this.schoolClass = Database.updateSchoolClass(schoolClass.getId(), schoolClass);
+                    spawnStudentDisplays(studentsPanel);
                 }
                 catch (SQLException ex) {
                     JOptionPane.showMessageDialog(null, "Erro fatal: Falha ao conectar-se com o banco de dados", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -94,6 +95,20 @@ public class ModifySchoolClassScreen extends JPanel {
 
                 JLabel studentLabel = new JLabel(String.format("(%d) %s", student.getId(), student.getFirstName() + " " + student.getLastName()));
                 studentPanel.add(studentLabel);
+
+                JButton excludeStudentButton = new JButton("Remover Aluno");
+                excludeStudentButton.addActionListener(e -> {
+                    try {
+                        this.schoolClass.getStudentIds().remove(this.schoolClass.getStudentIds().indexOf(student.getId()));
+                        this.schoolClass = Database.updateSchoolClass(schoolClass.getId(), schoolClass);
+                        spawnStudentDisplays(parentPanel);
+                    }
+                    catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Erro fatal: Falha ao conectar-se com o banco de dados", "Erro", JOptionPane.ERROR_MESSAGE);
+                        backToSchoolClasses();
+                    }
+                });
+                studentPanel.add(excludeStudentButton);
             }
         }
         catch (SQLException ex) {

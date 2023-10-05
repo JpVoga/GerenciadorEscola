@@ -63,7 +63,7 @@ public class SchoolClassesScreen extends JPanel {
 
             ResultSet resultSet = statement.getResultSet();
             while (resultSet.next()) {
-                SchoolClass schoolClass = new SchoolClass(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getInt("teacher_id"));
+                SchoolClass schoolClass = Database.readSchoolClass(resultSet.getInt("id"));
                 JPanel parentPanel = panel;
                 JPanel schoolClassPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -71,9 +71,9 @@ public class SchoolClassesScreen extends JPanel {
 
                 schoolClassPanel.add(new JLabel(String.format("(%d) %s", schoolClass.getId(), schoolClass.getName())));
 
-                JButton modifySchoolClass = new JButton("Modificar");
-                modifySchoolClass.addActionListener(e -> this.window.setContent(new ModifySchoolClassScreen(window, schoolClass)));;
-                schoolClassPanel.add(modifySchoolClass);
+                JButton modifySchoolClassButton = new JButton("Modificar");
+                modifySchoolClassButton.addActionListener(e -> this.window.setContent(new ModifySchoolClassScreen(window, schoolClass)));;
+                schoolClassPanel.add(modifySchoolClassButton);
 
                 JButton deleteSchoolClass = new JButton("Excluir Turma");
                 deleteSchoolClass.addActionListener(e -> {
